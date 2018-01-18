@@ -32,6 +32,25 @@
     </parent>
     <dependencies>
         <dependency>
+            <!-- The gaianDB jar is taken from the latest distribution  -->
+            <!-- In future this could be pushed to a maven repo        -->
+            <groupId>gaiandb</groupId>
+            <artifactId>com.ibm.gaiandb</artifactId>
+            <version>2.1.8_20160523</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/resources/GAIANDB.jar</systemPath>
+        </dependency>
+        <dependency>
+            <!-- The derby jar is taken from the latest distribution      -->
+            <!-- 10.8.3.1.                                       -->
+            <!-- will verify if can be taken from live maven repo instead -->
+            <groupId>gaiandb</groupId>
+            <artifactId>com.apache.derby</artifactId>
+            <version>1.0</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/resources/derby.jar</systemPath>
+        </dependency>
+        <dependency>
             <groupId>commons-logging</groupId>
             <artifactId>commons-logging</artifactId>
             <version>${commons.logging.version}</version>
