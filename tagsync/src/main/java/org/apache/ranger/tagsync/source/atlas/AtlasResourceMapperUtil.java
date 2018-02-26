@@ -89,6 +89,7 @@ public class AtlasResourceMapperUtil {
 		initializeAtlasResourceMapper(new AtlasHbaseResourceMapper(), properties);
 		initializeAtlasResourceMapper(new AtlasKafkaResourceMapper(), properties);
 		initializeAtlasResourceMapper(new AtlasStormResourceMapper(), properties);
+		initializeAtlasResourceMapper(new AtlasGaianResourceMapper(), properties);
 
 		// Initialize the custom mappers
 		boolean ret = true;
