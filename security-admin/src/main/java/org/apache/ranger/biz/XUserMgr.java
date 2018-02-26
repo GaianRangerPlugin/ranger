@@ -53,6 +53,7 @@ import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.RangerConstants;
+import org.apache.ranger.common.RangerServicePoliciesCache;
 import org.apache.ranger.common.SearchCriteria;
 import org.apache.ranger.common.UserSessionBase;
 import org.apache.ranger.db.RangerDaoManager;
@@ -852,8 +853,24 @@ public class XUserMgr extends XUserMgrBase {
 				xGroup, "update");
 		xaBizUtil.createTrxLog(trxLogList);
 		vXGroup = (VXGroup) xGroupService.updateResource(vXGroup);
+		if (vXGroup != null) {
+			updateXgroupUserForGroupUpdate(vXGroup);
+			RangerServicePoliciesCache.sInstance=null;
+		}
 		return vXGroup;
 	}
+
+	private void updateXgroupUserForGroupUpdate(VXGroup vXGroup) {
+		List<XXGroupUser> grpUsers = daoManager.getXXGroupUser().findByGroupId(vXGroup.getId());
+		if(CollectionUtils.isNotEmpty(grpUsers)){
+			for (XXGroupUser grpUser : grpUsers) {
+				VXGroupUser vXGroupUser = xGroupUserService.populateViewBean(grpUser);
+				vXGroupUser.setName(vXGroup.getName());
+				updateXGroupUser(vXGroupUser);
+			}
+		}
+	}
+
 	public VXGroupUser updateXGroupUser(VXGroupUser vXGroupUser) {
 		checkAdminAccess();
 		return super.updateXGroupUser(vXGroupUser);
@@ -1375,6 +1392,7 @@ public class XUserMgr extends XUserMgrBase {
 		if(vXUser!=null && roleListNewProfile.size()>0){
 			VXPortalUser oldUserProfile = userMgr.getUserProfileByLoginId(vXUser.getName());
 			if(oldUserProfile!=null){
+				denySelfRoleChange(oldUserProfile.getLoginId());
 				updateUserRolesPermissions(oldUserProfile,roleListNewProfile);
 				portalUserRoleList = daoManager.getXXPortalUserRole().findByUserId(oldUserProfile.getId());
 				return getStringListFromUserRoleList(portalUserRoleList);
@@ -1397,6 +1415,7 @@ public class XUserMgr extends XUserMgrBase {
 		if(userName!=null && roleListNewProfile.size()>0){
 			VXPortalUser oldUserProfile = userMgr.getUserProfileByLoginId(userName);
 			if(oldUserProfile!=null){
+				denySelfRoleChange(oldUserProfile.getLoginId());
 				updateUserRolesPermissions(oldUserProfile,roleListNewProfile);
 				List<XXPortalUserRole> portalUserRoleList = daoManager.getXXPortalUserRole().findByUserId(oldUserProfile.getId());
 				return getStringListFromUserRoleList(portalUserRoleList);
@@ -2224,4 +2243,17 @@ public class XUserMgr extends XUserMgrBase {
                         throw restErrorUtil.createRESTException("serverMsg.xuserMgrValidatePassword", MessageEnums.INVALID_PASSWORD, null, "Password cannot be blank/null", null);
                 }
         }
+
+        public void denySelfRoleChange(String userName) {
+            UserSessionBase session = ContextUtil.getCurrentUserSession();
+            if (session != null && session.getXXPortalUser()!=null) {
+                if (userName.equals(session.getXXPortalUser().getLoginId())) {
+                    throw restErrorUtil.create403RESTException("Permission"
+                            + " denied. LoggedInUser="
+                            + (session != null ? session.getXXPortalUser().getId()
+                                    : "Not Logged In")
+                            + " ,isn't permitted to change its own role.");
+                }
+            }
+	}
 }

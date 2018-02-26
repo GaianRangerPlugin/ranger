@@ -456,16 +456,13 @@ public class UserMgr {
 			VXPasswordChange changeEmail) {
 		checkAccessForUpdate(gjUser);
 		if (StringUtils.isEmpty(changeEmail.getEmailAddress())) {
-			throw restErrorUtil.createRESTException(
-					"serverMsg.userMgrInvalidEmail",
-					MessageEnums.INVALID_INPUT_DATA, changeEmail.getId(),
-					"emailAddress", changeEmail.toString());
+			changeEmail.setEmailAddress(null);
 		}
 
 		String encryptedOldPwd = encrypt(gjUser.getLoginId(),
 				changeEmail.getOldPassword());
 
-		if (!stringUtil.validateEmail(changeEmail.getEmailAddress())) {
+		if (!StringUtils.isEmpty(changeEmail.getEmailAddress()) && !stringUtil.validateEmail(changeEmail.getEmailAddress())) {
 			logger.info("Invalid email address." + changeEmail);
 			throw restErrorUtil.createRESTException(
 					"serverMsg.userMgrInvalidEmail",
@@ -954,8 +951,8 @@ public class UserMgr {
 		 * return false; }
 		 */
 		boolean publicRole = false;
-		for (int i = 0; i < publicRoles.length; i++) {
-			if (publicRoles[i].equalsIgnoreCase(gjUserRole.getUserRole())) {
+		for (String publicRoleStr : publicRoles) {
+			if (publicRoleStr.equalsIgnoreCase(gjUserRole.getUserRole())) {
 				publicRole = true;
 				break;
 			}
@@ -975,8 +972,8 @@ public class UserMgr {
 		List<XXPortalUserRole> roleList = daoManager.getXXPortalUserRole()
 				.findByUserId(userId);
 		boolean publicRole = false;
-		for (int i = 0; i < publicRoles.length; i++) {
-			if (publicRoles[i].equalsIgnoreCase(userRole)) {
+		for (String publicRoleStr : publicRoles) {
+			if (publicRoleStr.equalsIgnoreCase(userRole)) {
 				publicRole = true;
 				break;
 			}
