@@ -28,9 +28,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class AtlasGaianResourceMapper extends AtlasResourceMapper {
-	public static final String ENTITY_TYPE_GAIAN_SCHEMA     = "gaian_schema";
-	public static final String ENTITY_TYPE_GAIAN_TABLE  = "gaian_table";
-	public static final String ENTITY_TYPE_GAIAN_COLUMN = "gaian_column";
+	public static final String ENTITY_TYPE_GAIAN_SCHEMA     = "gaianSchema";
+	public static final String ENTITY_TYPE_GAIAN_TABLE  = "gaianTable";
+	public static final String ENTITY_TYPE_GAIAN_COLUMN = "gaianColumn";
 
 	public static final String RANGER_TYPE_GAIAN_SCHEMA     = "schema";
 	public static final String RANGER_TYPE_GAIAN_TABLE  = "table";
@@ -41,8 +41,9 @@ public class AtlasGaianResourceMapper extends AtlasResourceMapper {
 
 	public static final String[] SUPPORTED_ENTITY_TYPES = { ENTITY_TYPE_GAIAN_SCHEMA, ENTITY_TYPE_GAIAN_TABLE, ENTITY_TYPE_GAIAN_COLUMN };
 
+	public static final String GAIAN_RESOURCE_NAME "gaian";
 	public AtlasGaianResourceMapper() {
-		super("hive", SUPPORTED_ENTITY_TYPES);
+		super("gaian", SUPPORTED_ENTITY_TYPES);
 	}
 
 	@Override
@@ -52,19 +53,18 @@ public class AtlasGaianResourceMapper extends AtlasResourceMapper {
 			throw new Exception("attribute '" +  ENTITY_ATTRIBUTE_QUALIFIED_NAME + "' not found in entity");
 		}
 
+		// The fully qualified name is . seperated ie GAIAN.EMPLOYEE.SALARY
+        // This is used RATHER than any structural relationships in the entity
+        // However tag propogation schema->table->column will rely on these relationships
+        // to cause the right events to be sent by atlas, and hence received by tagsync, to update ranger
 		String resourceStr = getResourceNameFromQualifiedName(qualifiedName);
 		if (StringUtils.isEmpty(resourceStr)) {
 			throwExceptionWithMessage("resource not found in attribute '" +  ENTITY_ATTRIBUTE_QUALIFIED_NAME + "': " + qualifiedName);
 		}
 
-		String clusterName = getClusterNameFromQualifiedName(qualifiedName);
-		if (StringUtils.isEmpty(clusterName)) {
-			throwExceptionWithMessage("cluster-name not found in attribute '" +  ENTITY_ATTRIBUTE_QUALIFIED_NAME + "': " + qualifiedName);
-		}
-
 		String   entityType  = entity.getTypeName();
 		String   entityGuid  = entity.getId() != null ? entity.getId()._getId() : null;
-		String   serviceName = getRangerServiceName(clusterName);
+		String   serviceName = GAIAN_RESOURCE_NAME; // Fixed value for now. In future could associate with entities
 		String[] resources   = resourceStr.split(QUALIFIED_NAME_DELIMITER);
 		String   schemaName      = resources.length > 0 ? resources[0] : null;
 		String   tblName     = resources.length > 1 ? resources[1] : null;
